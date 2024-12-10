@@ -1,0 +1,36 @@
+<script>
+    // Create Pixi Application
+    const app = new PIXI.Application({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundColor: 0x000000,
+        resizeTo: window, // Auto-resizes with window
+    });
+    document.getElementById("pixi-container").appendChild(app.view);
+
+    // Load Video as a Texture
+    const video = document.createElement("video");
+    video.src = "https://joinamply.github.io/5x5/video-test.webm"; // Path to your video file
+    video.muted = true; // Mute for autoplay
+    video.loop = false; // Let scroll control it
+    video.crossOrigin = "anonymous"; // Ensure CORS is set up
+    video.play(); // Needed to initialize video texture
+
+    const videoTexture = PIXI.Texture.from(video);
+    const videoSprite = new PIXI.Sprite(videoTexture);
+    videoSprite.width = app.screen.width; // Match video to screen size
+    videoSprite.height = app.screen.height;
+    app.stage.addChild(videoSprite);
+
+    // Sync Video Playback with Scroll
+    window.addEventListener("scroll", () => {
+        const scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+        video.currentTime = scrollProgress * video.duration; // Adjust video playback
+    });
+    // Pause Video to Prevent Automatic Playback
+    video.addEventListener("timeupdate", () => {
+        if (!video.paused) {
+            video.pause(); // Ensure the video stays paused
+        }
+    });
+</script>
