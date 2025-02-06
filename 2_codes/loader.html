@@ -1,0 +1,47 @@
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        $('[loader="parent"]').each(function () {
+            // Blocks page scroll
+            document.body.style.overflow = 'hidden';
+            const parent = $(this);
+            const text = new SplitType('[loader="text"]');
+
+            let loaderTl = gsap.timeline({
+                paused: true,
+                onComplete: () => {
+                    gsap.to($('[loader="parent"]'), {
+                        opacity: 0,
+                        duration: 0.5,
+                        ease: 'power4.in',
+                        onComplete: () => {
+                            parent.remove();
+                            // Unblocks page scroll
+                            document.body.style.overflow = 'auto';
+                        }
+                    });
+                }
+            });
+
+            loaderTl.fromTo(text.words, {
+                y: '100%',
+                opacity: 0
+            }, {
+                y: '0%',
+                opacity: 1,
+                duration: 1,
+                stagger: 0.1,
+                ease: 'power4.out',
+            });
+
+            loaderTl.to(text.words, {
+                y: '-100%',
+                opacity: 0,
+                duration: 1,
+                stagger: 0.1,
+                ease: 'power4.in',
+            }, '+=.1');
+
+            loaderTl.play();
+        });
+    });
+</script>

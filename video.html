@@ -1,10 +1,12 @@
 <script>
+    const pixiContainer = $('[home-hero="pixi-container"]');
     const app = new PIXI.Application({
-        width: window.innerWidth,
-        height: window.innerHeight,
-        backgroundColor: 0x000000,
+        width: pixiContainer.width(),
+        height: pixiContainer.height(),
+        backgroundColor: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--_themes---bakground-primary').replace('#', ''), 16),
+        transparent: true,
     });
-    document.getElementById("pixi-container").appendChild(app.view);
+    pixiContainer.append(app.view);
 
     // Load Frame Textures
     const frames = [];
@@ -21,10 +23,18 @@
     sprite.height = app.screen.height;
     app.stage.addChild(sprite);
 
-    // Sync Frame Playback with Scroll
-    window.addEventListener("scroll", () => {
-        const scrollProgress = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-        const currentFrame = Math.floor(scrollProgress * (frames.length - 1));
-        sprite.texture = frames[currentFrame]; // Update sprite texture
+    // Play Frames from Start to Finish using GSAP
+    let currentFrame = 0;
+    const totalFrames = frames.length;
+
+    gsap.to({}, {
+        duration: totalFrames / 30, // Assuming 30 FPS
+        onUpdate: () => {
+            sprite.texture = frames[currentFrame];
+            currentFrame = (currentFrame + 1) % totalFrames;
+        },
+        onComplete: () => {
+            currentFrame = 0; // Reset to the first frame after completion
+        }
     });
 </script>
