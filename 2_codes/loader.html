@@ -9,6 +9,8 @@
             let loaderTl = gsap.timeline({
                 paused: true,
                 onComplete: () => {
+                    // Throw a message to the other script be able to read
+                    document.dispatchEvent(new CustomEvent('loader:done'));
                     gsap.to($('[loader="parent"]'), {
                         opacity: 0,
                         duration: 0.5,

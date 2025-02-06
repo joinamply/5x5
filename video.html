@@ -1,4 +1,5 @@
 <script>
+
     const pixiContainer = $('[home-hero="pixi-container"]');
     const app = new PIXI.Application({
         width: pixiContainer.width(),
@@ -10,9 +11,8 @@
 
     // Load Frame Textures
     const frames = [];
-    for (let i = 0; i <= 372; i++) {
+    for (let i = 0; i <= 186; i++) {
         let num = i.toString().padStart(5, "0");
-        console.log(num);
         const texture = PIXI.Texture.from(`https://joinamply.github.io/5x5/anim-sequence/a_${num}.png`);
         frames.push(texture);
     }
@@ -27,14 +27,27 @@
     let currentFrame = 0;
     const totalFrames = frames.length;
 
-    gsap.to({}, {
-        duration: totalFrames / 30, // Assuming 30 FPS
-        onUpdate: () => {
-            sprite.texture = frames[currentFrame];
-            currentFrame = (currentFrame + 1) % totalFrames;
-        },
-        onComplete: () => {
-            currentFrame = 0; // Reset to the first frame after completion
-        }
-    });
+    function playAnim() {
+        gsap.to({}, {
+            duration: totalFrames / 30, // Assuming 30 FPS
+            onUpdate: () => {
+                if (currentFrame < totalFrames) {
+                    sprite.texture = frames[currentFrame];
+                    currentFrame++;
+                } else {
+                    sprite.texture = frames[totalFrames - 1]; // Set to the last frame
+                }
+            }
+        });
+    }
+
+    if ($('[loader="parent"]').length > 0) {
+        // Wait for the custom event loader:done
+        document.addEventListener('loader:done', () => {
+            playAnim();
+        });
+    }
+    else {
+        playAnim();
+    }
 </script>
