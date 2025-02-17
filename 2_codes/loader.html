@@ -4,13 +4,49 @@
             // Blocks page scroll
             document.body.style.overflow = 'hidden';
             const parent = $(this);
-            const text = new SplitType('[loader="text"]');
+            const textElement = parent.find('[loader="text"]');
+            let textElementCopies = [];
+            const text = new SplitType(textElement, {
+                types: 'words',
+                reduce: false,
+            });
+
+            /* We can't animate texts that are using bg clip, so let's duplicate 
+            the loader text based on the amount of words and animate the duplicates instead.
+            1- Wrap the loader text into a div set to position relative.
+            2- Now create copies of loader text and insert them into the parent div.
+            3- Show just one word per copy and animate them.
+            */
+            text.words.forEach((word, index) => {
+                textElementCopies.push(textElement.clone());
+                const copy = textElementCopies[index];
+                copy.appendTo(textElement.parent());
+                copy.css({
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    right: 0,
+                    width: '100%',
+                    height: '100%',
+                });
+                copy.find('.word').each((i, el) => {
+                    if (i !== index) {
+                        $(el).css({
+                            opacity: 0,
+                        });
+                    }
+                });
+            });
+            // Hide the word in the original text
+            textElement.find('.word').css({
+                opacity: 0,
+            });
+
 
             let loaderTl = gsap.timeline({
                 paused: true,
                 onComplete: () => {
-                    // Throw a message to the other script be able to read
-                    document.dispatchEvent(new CustomEvent('loader:done'));
                     gsap.to($('[loader="parent"]'), {
                         opacity: 0,
                         duration: 0.5,
@@ -24,8 +60,8 @@
                 }
             });
 
-            loaderTl.fromTo(text.words, {
-                y: '100%',
+            loaderTl.fromTo(textElementCopies, {
+                y: '50%',
                 opacity: 0
             }, {
                 y: '0%',
@@ -35,8 +71,8 @@
                 ease: 'power4.out',
             });
 
-            loaderTl.to(text.words, {
-                y: '-100%',
+            loaderTl.to(textElementCopies, {
+                y: '-50%',
                 opacity: 0,
                 duration: 1,
                 stagger: 0.1,
