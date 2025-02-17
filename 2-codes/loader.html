@@ -55,6 +55,8 @@
                             parent.remove();
                             // Unblocks page scroll
                             document.body.style.overflow = 'auto';
+                            // Throw a custom event to let the page know that the loader is done
+                            document.dispatchEvent(new Event('loader:done'));
                         }
                     });
                 }
