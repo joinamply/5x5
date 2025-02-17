@@ -3,7 +3,7 @@
         $('[header="1"]').each(function () {
             const animPath = $(this).attr('anim-path');
             const animFormat = $(this).attr('anim-format');
-            const animFrames = $(this).attr('anim-frames');
+            let animFrames = $(this).attr('anim-frames');
             const showHeadingOnFrame = $(this).attr('anim-show-heading-on-frame');
             const pixiContainer = $('[home-hero="pixi-container"]');
             const app = new PIXI.Application({
@@ -16,9 +16,9 @@
 
             // Load Frame Textures
             const frames = [];
-            for (let i = 0; i <= 259; i++) {
+            for (let i = 0; i <= animFrames; i++) {
                 let num = i.toString().padStart(3, "0");
-                const texture = PIXI.Texture.from(`https://joinamply.github.io/5x5/0-animation/home-hero/${num}.webp`);
+                const texture = PIXI.Texture.from(`${animPath}${num}${animFormat}`);
                 frames.push(texture);
             }
 
@@ -51,7 +51,7 @@
                     onUpdate: function () {
                         currentFrame = Math.floor(this.targets()[0].frame);
                         sprite.texture = frames[currentFrame];
-                        if (currentFrame == 120) {
+                        if (currentFrame == showHeadingOnFrame) {
                             titlesTl.play();
                         }
                     }
