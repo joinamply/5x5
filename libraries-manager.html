@@ -1,0 +1,39 @@
+<script>
+    let loadedLibraries = {}; // Tracks loaded libraries
+
+    function dispatchLibraryEvent(library) {
+        loadedLibraries[library] = true;
+        document.dispatchEvent(new Event(`${library}:loaded`));
+        console.log(`${library} loaded.`);
+    }
+
+    function onLibrariesLoaded(requiredLibraries, callback) {
+        let loaded = {}; // Track which required libraries have loaded
+
+        function checkAllLoaded() {
+            return requiredLibraries.every(lib => loaded[lib]);
+        }
+
+        function libraryLoaded(event) {
+            const libName = event.type.replace(":loaded", ""); // Extract library name
+            loaded[libName] = true;
+            console.log(`✅ ${libName} is now ready.`);
+
+            if (checkAllLoaded()) {
+                callback();
+            }
+        }
+
+        requiredLibraries.forEach(lib => {
+            if (typeof window[lib] !== "undefined") {
+                loaded[lib] = true;
+            } else {
+                document.addEventListener(`${lib}:loaded`, libraryLoaded);
+            }
+        });
+
+        if (checkAllLoaded()) {
+            callback();
+        }
+    }
+</script>
