@@ -1,0 +1,77 @@
+<script>
+    var Webflow = Webflow || [];
+    Webflow.push(function () {
+        if (!document.querySelector('[header="1"]')) return;
+
+        onLibrariesLoaded(["gsap", "pixi"], function () {
+            $('[header="1"]').each(function () {
+                const animPath = $(this).attr('anim-path');
+                const animFormat = $(this).attr('anim-format');
+                let animFrames = $(this).attr('anim-frames');
+                const showHeadingOnFrame = $(this).attr('anim-show-heading-on-frame');
+                const pixiContainer = $('[home-hero="pixi-container"]');
+                const app = new PIXI.Application({
+                    width: pixiContainer.width(),
+                    height: pixiContainer.height(),
+                    backgroundColor: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--_themes---bakground-primary').replace('#', ''), 16),
+                    transparent: true,
+                });
+                pixiContainer.append(app.view);
+
+                // Load Frame Textures
+                const frames = [];
+                for (let i = 0; i <= animFrames; i++) {
+                    let num = i.toString().padStart(3, "0");
+                    const texture = PIXI.Texture.from(`${animPath}${num}${animFormat}`);
+                    frames.push(texture);
+                }
+
+                // Create Sprite and Set Initial Frame
+                const sprite = new PIXI.Sprite(frames[0]);
+                sprite.width = app.screen.width;
+                sprite.height = app.screen.height;
+                app.stage.addChild(sprite);
+
+                // Play Frames from Start to Finish using GSAP
+                let currentFrame = 0;
+                const totalFrames = frames.length;
+                // Get all the elements insinde .heading-title
+                let titles = $(this).find('.heading-title').children();
+                let titlesTl = gsap.timeline({ paused: true });
+
+                titlesTl.from(titles, {
+                    duration: 0.5,
+                    y: 50,
+                    opacity: 0,
+                    stagger: 0.3,
+                    ease: "power2.out"
+                });
+
+                function playAnim() {
+                    gsap.to({ frame: 0 }, {
+                        frame: totalFrames - 1,
+                        duration: totalFrames / 30,
+                        ease: "none",
+                        onUpdate: function () {
+                            currentFrame = Math.floor(this.targets()[0].frame);
+                            sprite.texture = frames[currentFrame];
+                            if (currentFrame == showHeadingOnFrame) {
+                                titlesTl.play();
+                            }
+                        }
+                    });
+                }
+
+                if ($('[loader="parent"]').length > 0) {
+                    // Wait for the custom event loader:done
+                    document.addEventListener('loader:done', () => {
+                        playAnim();
+                    });
+                }
+                else {
+                    playAnim();
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,95 @@
+<script>
+    var Webflow = Webflow || [];
+    Webflow.push(function () {
+        if (!document.querySelector('[loader="parent"]')) return;
+
+        onLibrariesLoaded(["gsap"], function () {
+
+            const currentPage = window.location.pathname;
+            const loaderPlayedKey = `loaderPlayed_${currentPage}`;
+
+            $('[loader="parent"]').each(function () {
+                const parent = $(this);
+                const playMultipleTimes = parent.attr("play-multiple-times") === "true";
+
+                if (sessionStorage.getItem(loaderPlayedKey) && !playMultipleTimes) {
+                    cleanupLoader(parent);
+                    return;
+                }
+
+                blockPageScroll(); // Prevents layout shift when hiding scroll
+                animateLoader(parent, () => {
+                    cleanupLoader(parent);
+                    sessionStorage.setItem(loaderPlayedKey, "true");
+                });
+            });
+        });
+
+        function blockPageScroll() {
+            requestAnimationFrame(() => {
+                document.body.style.overflow = "hidden";
+            });
+        }
+
+        function cleanupLoader(parent) {
+            gsap.to(parent, {
+                opacity: 0,
+                duration: 0.5,
+                ease: "power4.in",
+                onComplete: () => {
+                    parent.remove();
+                    document.body.style.overflow = "auto";
+                    document.dispatchEvent(new Event("loader:done"));
+                }
+            });
+        }
+
+        function animateLoader(parent, onCompleteCallback) {
+            const textElement = parent.find('[loader="text"]');
+            const textElementCopies = [];
+            const text = new SplitType(textElement, {
+                types: "words",
+                reduce: false
+            });
+
+            // Clone textElement once instead of multiple times in a loop
+            const parentWrapper = $("<div>").css({ position: "relative", width: "100%", height: "100%" });
+            textElement.wrap(parentWrapper);
+
+            text.words.forEach((word, index) => {
+                const copy = textElement.clone().appendTo(textElement.parent());
+                copy.css({ position: "absolute", width: "100%", height: "100%", top: 0, left: 0 });
+
+                copy.find(".word").each((i, el) => {
+                    if (i !== index) {
+                        $(el).css({ opacity: 0 });
+                    }
+                });
+
+                textElementCopies.push(copy);
+            });
+
+            // Hide words in the original text
+            textElement.find(".word").css({ opacity: 0 });
+
+            let loaderTl = gsap.timeline({
+                paused: true,
+                onComplete: onCompleteCallback
+            });
+
+            loaderTl.fromTo(
+                textElementCopies,
+                { y: "50%", opacity: 0 },
+                { y: "0%", opacity: 1, duration: 1, stagger: 0.1, ease: "power4.out" }
+            );
+
+            loaderTl.to(
+                textElementCopies,
+                { y: "-50%", opacity: 0, duration: 1, stagger: 0.1, ease: "power4.in" },
+                "+=.1"
+            );
+
+            loaderTl.play();
+        };
+    });
+</script>
