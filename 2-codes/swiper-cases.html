@@ -1,0 +1,193 @@
+<script>
+    var Webflow = Webflow || [];
+    Webflow.push(function () {
+        if (!document.querySelector('.swiper.is-case')) return;
+        onLibrariesLoaded(["swiper"], function () {
+            const swiperContainers = document.querySelectorAll('.swiper.is-case');
+            let swiper1, swiper2;
+
+            const currentSlideElement = document.getElementById('current-slide');
+            const totalSlidesElement = document.getElementById('total-slide');
+            const nextButton = document.querySelector('.swiper-btn-next.is-case');
+
+            if (nextButton) {
+                nextButton.style.borderColor = 'black';
+                nextButton.style.position = 'relative';
+
+                const progressElement = document.createElement('div');
+                progressElement.classList.add('progress-circle');
+
+                progressElement.style.position = 'absolute';
+                progressElement.style.top = '-3px';
+                progressElement.style.left = '-3px';
+                progressElement.style.width = 'calc(100% + 6px)';
+                progressElement.style.height = 'calc(100% + 6px)';
+                progressElement.style.borderRadius = '500px';
+                progressElement.style.pointerEvents = 'none';
+                progressElement.style.zIndex = '1';
+
+                progressElement.innerHTML = `
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="47"
+                            fill="none"
+                            stroke="#E8DE38"
+                            stroke-width="6"
+                            stroke-dasharray="295"
+                            stroke-dashoffset="295"
+                            transform="rotate(-90 50 50)"
+                            class="progress-circle-path"
+                        />
+                    </svg>
+                `;
+
+                nextButton.appendChild(progressElement);
+            }
+
+            const autoplayDuration = 5000;
+            let autoplayTimeout;
+            let animationStartTime;
+
+            function updateProgressBorder(progress) {
+                if (nextButton) {
+                    const progressPath = nextButton.querySelector('.progress-circle-path');
+                    if (progressPath) {
+                        const dashLength = 295; // Aproximadamente 2 * PI * 47
+                        const dashOffset = dashLength - (progress * dashLength);
+                        progressPath.setAttribute('stroke-dashoffset', dashOffset);
+
+                        const gradientPosition = progress * 100;
+                        const startColor = '#E8DE38';
+                        const endColor = '#B0881A';
+                        progressPath.setAttribute('stroke', startColor);
+
+                        if (progress > 0) {
+                            const gradient =
+                                <linearGradient id="progressGradient" gradientTransform="rotate(90)">
+                                    <stop offset="0%" stop-color="${startColor}" />
+                                    <stop offset="100%" stop-color="${endColor}" />
+                                </linearGradient>
+                                ;
+
+                            let gradientElement = document.getElementById('progressGradient');
+                            if (!gradientElement) {
+                                const svg = progressPath.closest('svg');
+                                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                                defs.innerHTML = gradient;
+                                svg.insertBefore(defs, svg.firstChild);
+                            }
+
+                            progressPath.setAttribute('stroke', 'url(#progressGradient)');
+                        }
+                    }
+                }
+            }
+
+            function startAutoplayTimer() {
+                clearTimeout(autoplayTimeout);
+                animationStartTime = Date.now();
+
+                function updateProgress() {
+                    const elapsed = Date.now() - animationStartTime;
+                    const progress = Math.min(elapsed / autoplayDuration, 1);
+
+                    updateProgressBorder(progress);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateProgress);
+                    }
+                }
+
+                updateProgress();
+
+                autoplayTimeout = setTimeout(() => {
+                    if (swiper2) {
+                        swiper2.slideNext();
+                    }
+                }, autoplayDuration);
+            }
+
+            if (swiperContainers.length >= 1) {
+                swiper1 = new Swiper(swiperContainers[0], {
+                    slidesPerView: 1,
+                    loop: true,
+                    loopedSlides: 3,
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    },
+                    speed: 500,
+                    allowTouchMove: false,
+                });
+
+                swiper2 = new Swiper(swiperContainers[1], {
+                    slidesPerView: 1,
+                    loopedSlides: 3,
+                    loop: true,
+                    effect: 'fade',
+                    fadeEffect: {
+                        crossFade: true
+                    },
+                    speed: 500,
+                    navigation: {
+                        nextEl: '.swiper-btn-next.is-case',
+                        prevEl: '.swiper-btn-prev.is-case'
+                    },
+                    on: {
+                        init: function () {
+                            updateSlideCounters(this);
+                            startAutoplayTimer();
+                        },
+                        slideChange: function () {
+                            updateSlideCounters(this);
+                            startAutoplayTimer();
+                        }
+                    }
+                });
+
+                function updateSlideCounters(swiper) {
+                    if (currentSlideElement) {
+                        currentSlideElement.textContent = (swiper.activeIndex + 1).toString().padStart(2, '0');
+                    }
+
+                    if (totalSlidesElement) {
+                        totalSlidesElement.textContent = swiper.slides.length.toString().padStart(2, '0');
+                    }
+                }
+
+                swiper2.on('slideChange', function () {
+                    swiper1.slideTo(swiper2.activeIndex);
+                });
+
+                swiper1.on('slideChange', function () {
+                    swiper2.slideTo(swiper1.activeIndex);
+                });
+
+                swiperContainers.forEach(container => {
+                    container.addEventListener('mouseenter', () => {
+                        clearTimeout(autoplayTimeout);
+                    });
+
+                    container.addEventListener('mouseleave', () => {
+                        startAutoplayTimer();
+                    });
+                });
+
+                if (nextButton) {
+                    nextButton.addEventListener('click', () => {
+                        startAutoplayTimer();
+                    });
+                }
+
+                const prevButton = document.querySelector('.swiper-btn-prev.is-case');
+                if (prevButton) {
+                    prevButton.addEventListener('click', () => {
+                        startAutoplayTimer();
+                    });
+                }
+            }
+        });
+    });
+</script>

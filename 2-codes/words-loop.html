@@ -1,0 +1,52 @@
+<script>
+    var Webflow = Webflow || [];
+    Webflow.push(function () {
+        if (!document.querySelector('.loop-container')) return;
+
+        onLibrariesLoaded(["gsap"], function () {
+            $('.loop-container').each(function () {
+                const words = $(this).attr('words-list') !== undefined ? $(this).attr('words-list').split(',') : "";
+                const $wordToAnim = $(this).find('.looping-words_word');
+
+                if (words.length <= 4) {
+                    console.error('You need at least 5 words to make the loop effect work');
+                    return;
+                }
+
+                const $listTrack = $wordToAnim.parent();
+                // Add the words to the parent element
+                for (let i = 0; i < words.length; i++) {
+                    let word = $wordToAnim.clone();
+                    word.text(words[i]);
+                    $listTrack.append(word);
+                }
+                // Now duplicate the listTrack. Insert one above and and bellow
+                const $listTrackClone = $listTrack.clone();
+                $listTrack.before($listTrackClone.clone());
+                $listTrack.after($listTrackClone.clone());
+                gsap.set('.looping-words_list-track', { y: '-100%' });
+                animate('.looping-words_list-track', 100, `${100 / (words.length + 1)}`);
+
+                function animate(track, posY, basePosY) {
+                    posY = parseFloat(posY);
+                    basePosY = parseFloat(basePosY);
+                    gsap.to(track, {
+                        y: `-${posY}%`, // offset to avoid the next word to be visible
+                        duration: 1,
+                        ease: 'elastic.out(1, 0.85)',
+                        onComplete: () => {
+                            setTimeout(() => {
+                                posY = posY + basePosY;
+                                if (posY >= 200) {
+                                    gsap.set(track, { y: '-100%' });
+                                    posY = 100 + basePosY;
+                                }
+                                animate(track, posY, basePosY);
+                            }, 1000);
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>

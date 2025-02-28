@@ -1,0 +1,89 @@
+<script>
+    var Webflow = Webflow || [];
+    Webflow.push(function () {
+        if (!document.querySelector('.swiper-nav-tab')) return;
+
+        onLibrariesLoaded(["gsap", "flip"], function () {
+            function setupTabIndicator() {
+                setTimeout(() => {
+                    const tabsContainer = $(".tablink-swiper").first().parent();
+
+                    if (tabsContainer.find('.tab-active-indicator').length === 0) {
+                        const activeIndicator = $('<div class="tab-active-indicator"></div>');
+                        tabsContainer.append(activeIndicator);
+
+                        const firstTab = $(".tablink-swiper").first();
+                        activeIndicator.css({
+                            position: 'absolute',
+                            left: firstTab.position().left,
+                            top: firstTab.position().top,
+                            width: firstTab.outerWidth(),
+                            height: firstTab.outerHeight(),
+                            backgroundColor: '#1C2631',
+                            borderRadius: '100px',
+                            pointerEvents: 'none',
+                            zIndex: 0
+                        });
+
+                        setupTabAnimations(activeIndicator);
+                    }
+                }, 100);
+            }
+
+            function setupTabAnimations(activeIndicator) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.target.classList.contains('is-active')) {
+                            animateIndicator($(mutation.target), activeIndicator);
+                        }
+                    });
+                });
+
+                $(".tablink-swiper").each(function () {
+                    observer.observe(this, {
+                        attributes: true,
+                        attributeFilter: ['class']
+                    });
+                });
+            }
+
+            function animateIndicator(targetTab, indicator) {
+                const state = Flip.getState(indicator);
+
+                indicator.css({
+                    left: targetTab.position().left,
+                    top: targetTab.position().top,
+                    width: targetTab.outerWidth(),
+                    height: targetTab.outerHeight()
+                });
+
+                Flip.from(state, {
+                    duration: 0.2,
+                    ease: "power2.out",
+                    absolute: true,
+                    scale: true,
+                    onComplete: () => {
+                        indicator.css({
+                            left: targetTab.position().left,
+                            top: targetTab.position().top
+                        });
+                    }
+                });
+            }
+
+            setupTabIndicator();
+
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    const activeTab = $(".tablink-swiper.is-active");
+                    const indicator = $('.tab-active-indicator');
+                    if (activeTab.length && indicator.length) {
+                        animateIndicator(activeTab, indicator);
+                    }
+                }, 250);
+            });
+        });
+    });
+</script>

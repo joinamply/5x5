@@ -1,0 +1,39 @@
+<script>
+    let filterReady = false;
+    let combineReady = false;
+    window.fsAttributes = window.fsAttributes || [];
+    window.fsAttributes.push([
+        'cmsfilter',
+        (filterInstances) => {
+            console.log('cmsfilter Successfully loaded!');
+            filterReady = true;
+        },
+    ]);
+    window.fsAttributes.push([
+        'cmscombine',
+        (combineInstances) => {
+            console.log('cmscombine Successfully loaded!');
+            combineReady = true;
+        },
+    ]);
+    window.fsAttributes.push([
+        'cmssort',
+        (loadInstances) => {
+            console.log('cmscombine Successfully loaded!');
+            document.querySelector(".fs_cmssort_button").click();
+        },
+    ]);
+
+    // Wait until both are ready
+    const checkReady = () => {
+        if (filterReady && combineReady) {
+            console.log('Both are ready!');
+            window.fsAttributes.cmssort.init();
+        } else {
+            console.log('Not ready yet');
+            setTimeout(checkReady, 10);
+        }
+    };
+    // Call the checkReady function
+    checkReady();
+</script>
