@@ -16,6 +16,7 @@
 
                 mm.add("(min-width: 992px)", () => {
                     if (videoDesktop.length) {
+                        videoDesktop[0].muted = true;
                         videoDesktop[0].play();
                         if (videoMobile.length) videoMobile[0].pause();
                     }
@@ -23,6 +24,7 @@
 
                 mm.add("(max-width: 991px)", () => {
                     if (videoMobile.length) {
+                        videoMobile[0].muted = true;
                         videoMobile[0].play();
                         if (videoDesktop.length) videoDesktop[0].pause();
                     }
